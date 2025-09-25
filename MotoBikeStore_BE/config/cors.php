@@ -17,7 +17,7 @@ return [
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],   // Cho phép tất cả header
-
+    
     'exposed_headers' => [],
 
     'max_age' => 0,

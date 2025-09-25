@@ -10,6 +10,8 @@ import Products from "./pages/Customers/Products";
 import Cart from "./pages/Customers/Cart";
 import ProductDetail from "./pages/Customers/ProductDetail";
 import CategoryProducts from "./pages/Customers/CategoryProducts";
+import Register from "./pages/Customers/Register";
+
 
 // ===== Admin pages/layout =====
 import Dashboard from "./pages/Admin/Dashboard";
@@ -28,6 +30,7 @@ function Layout({ children }) {
           <NavLink to="/" end>Trang chủ</NavLink>
           <NavLink to="/products">Sản phẩm</NavLink>
           <NavLink to="/cart">Giỏ hàng</NavLink>
+          <NavLink to="/register">Đăng ký</NavLink>
         </nav>
       </header>
 
@@ -86,6 +89,8 @@ function App() {
         <Route path="/category/:id" element={<Layout><CategoryProducts addToCart={addToCart} /></Layout>} />
         <Route path="/categories/:id" element={<Navigate to="/category/:id" replace />} />
         <Route path="/cart" element={<Layout><Cart cart={cart} /></Layout>} />
+        <Route path="/register" element={<Register />} />
+
 
         {/* ===== Admin routes ===== */}
         <Route path="/admin" element={<AdminLayout />}>
