@@ -4,27 +4,49 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
+    // Lấy tất cả danh mục
     public function index()
     {
-        return Category::select('id','name','slug')->orderBy('name')->get();
+        $cats = Category::all()->map(function ($cat) {
+            $cat->image_url = $cat->image 
+                ? url('assets/images/' . $cat->image) 
+                : null;
+            return $cat;
+        });
+
+        return response()->json($cats);
     }
 
+    // Lấy thông tin chi tiết 1 danh mục
     public function show($id)
     {
-        return Category::select('id','name','slug')->findOrFail($id);
+        $cat = Category::find($id);
+        if (!$cat) {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
+
+        $cat->image_url = $cat->image 
+            ? url('assets/images/' . $cat->image) 
+            : null;
+
+        return response()->json($cat);
     }
 
+    // Lấy tất cả sản phẩm thuộc 1 danh mục
     public function products($id)
     {
-        $category = Category::findOrFail($id);
+        $cat = Category::find($id);
+        if (!$cat) {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
 
-        return $category->products()
-            ->with('category:id,name')
-            ->select('id','category_id','name','price','thumbnail_url')
-            ->latest('id')
-            ->paginate(12);
+        // Lấy sản phẩm liên kết với category
+        $products = $cat->products()->with('brand:id,name')->get();
+
+        return response()->json($products);
     }
 }

@@ -2,34 +2,39 @@
 
 namespace App\Models;
 
-<<<<<<< HEAD:MotoBikeStore_BE/app/Models/Category.php
-=======
 use Illuminate\Database\Eloquent\Factories\HasFactory;
->>>>>>> cbbee2701c33398bd19c84ce4bf7d9278b7a2369:StoreVegetables_BE/app/Models/Category.php
 use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-<<<<<<< HEAD:MotoBikeStore_BE/app/Models/Category.php
-    // Nói rõ tên bảng trong DB
-    protected $table = 'uttt_category';
+    use HasFactory;
+
+    protected $table = 'ntt_category';   // tên bảng
+    protected $primaryKey = 'id';        // khóa chính
+    public $timestamps = false;          // nếu bảng không có created_at, updated_at
 
     protected $fillable = [
         'name',
         'slug',
+        'image',
+        'parent_id',
+        'sort_order',
+        'description'
     ];
-}
-=======
-    use HasFactory;
 
-    protected $table = 'uttt_category'; // ✅ trỏ đúng bảng trong DB
+    // ✅ thêm field image_url vào JSON trả về
+    protected $appends = ['image_url'];
 
-    protected $fillable = ['name', 'slug', 'image', 'parent_id', 'sort_order', 'description'];
+    public function getImageUrlAttribute()
+    {
+        return $this->image
+            ? url('assets/images/' . $this->image)
+            : null;
+    }
 
+    // Quan hệ với Product
     public function products()
     {
         return $this->hasMany(Product::class, 'category_id');
     }
 }
-
->>>>>>> cbbee2701c33398bd19c84ce4bf7d9278b7a2369:StoreVegetables_BE/app/Models/Category.php
