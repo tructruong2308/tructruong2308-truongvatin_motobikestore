@@ -11,9 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
-    })
+->withMiddleware(function (Middleware $middleware): void {
+    $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
+
+    // ✅ Nhóm api chỉ cần binding là đủ
+    $middleware->group('api', [
+        \Illuminate\Routing\Middleware\SubstituteBindings::class,
+    ]);
+})
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

@@ -1,19 +1,18 @@
-<?php   
+<?php
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class User extends Authenticatable
 {
-    use HasFactory;
+    use HasApiTokens, HasFactory, Notifiable;
 
-    // Nếu dùng bảng mặc định:
-    protected $table = 'users';
+    // CHO PHÉP gán các field này
+    protected $fillable = ['name', 'email', 'password', 'phone'];
 
-    // Nếu dùng bảng custom, bỏ dòng trên và dùng:
-    // protected $table = 'nqtv_user';
-
-    protected $fillable = ['name','email','password','phone'];
-    protected $hidden = ['password'];
+    protected $hidden = ['password', 'remember_token'];
 }
