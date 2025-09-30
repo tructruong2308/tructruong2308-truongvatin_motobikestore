@@ -1,6 +1,8 @@
 <?php
-namespace App\Http\Controllers;
 
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -12,7 +14,8 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'name'     => 'required|string|max:100',
-            'email'    => 'required|email|unique:users,email',
+            'email'    => 'required|email|unique:ntt_user,email',
+            'username' => 'required|string|max:100|unique:ntt_user,username',
             'password' => 'required|string|min:6',
             'phone'    => 'required|string|max:20',
         ]);
@@ -20,8 +23,11 @@ class AuthController extends Controller
         $user = User::create([
             'name'     => $data['name'],
             'email'    => $data['email'],
+            'username' => $data['username'],
             'password' => Hash::make($data['password']),
             'phone'    => $data['phone'],
+            'roles'    => 'customer',
+            'status'   => 1,
         ]);
 
         $token = $user->createToken('web')->plainTextToken;
@@ -61,9 +67,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Thu hồi token hiện tại
         $request->user()->currentAccessToken()->delete();
-
         return response()->json(['message' => 'Đã đăng xuất']);
     }
 }

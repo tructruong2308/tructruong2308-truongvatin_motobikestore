@@ -6,10 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrderDetail extends Model
 {
-    // Tên bảng trong DB
     protected $table = 'ntt_orderdetail';
 
-    // Các cột cho phép gán dữ liệu
     protected $fillable = [
         'order_id',
         'product_id',
@@ -18,7 +16,21 @@ class OrderDetail extends Model
         'amount',
     ];
 
-    // ❌ Bảng này không có created_at, updated_at
     public $timestamps = false;
 
+    protected $casts = [
+        'price_buy' => 'float',
+        'qty'       => 'integer',
+        'amount'    => 'float',
+    ];
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class, 'order_id', 'id');
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id', 'id');
+    }
 }

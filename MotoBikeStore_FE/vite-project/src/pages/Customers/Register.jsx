@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // 👈 thêm
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
-  const navigate = useNavigate(); // 👈 khởi tạo navigate
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
     email: "",
+    username: "", // 👈 thêm username
     password: "",
     confirmPassword: "",
     phone: "",
@@ -28,10 +29,14 @@ export default function Register() {
     try {
       const res = await fetch("http://127.0.0.1:8000/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({
           name: form.name,
           email: form.email,
+          username: form.username, // 👈 gửi username
           password: form.password,
           phone: form.phone,
         }),
@@ -41,7 +46,7 @@ export default function Register() {
       if (res.ok) {
         setMessage("✅ Đăng ký thành công! Đang chuyển sang trang đăng nhập...");
         setTimeout(() => {
-          navigate("/login"); // 👈 tự động chuyển sang trang login
+          navigate("/login");
         }, 1500);
       } else {
         setMessage("❌ " + (data.message || JSON.stringify(data)));
@@ -82,7 +87,6 @@ export default function Register() {
       marginBottom: "16px",
       fontSize: "14px",
       outline: "none",
-      transition: "border 0.3s",
     },
     inputGroup: { position: "relative", marginBottom: "16px" },
     toggleBtn: {
@@ -102,7 +106,6 @@ export default function Register() {
       cursor: "pointer",
       fontWeight: "bold",
       fontSize: "15px",
-      transition: "opacity 0.3s",
     },
     message: {
       padding: "10px",
@@ -149,6 +152,15 @@ export default function Register() {
             style={styles.input}
           />
           <input
+            type="text"
+            name="username"
+            placeholder="Tên đăng nhập"
+            value={form.username}
+            onChange={handleChange}
+            required
+            style={styles.input}
+          />
+          <input
             type="email"
             name="email"
             placeholder="Email"
@@ -167,7 +179,10 @@ export default function Register() {
               required
               style={styles.input}
             />
-            <span style={styles.toggleBtn} onClick={() => setShowPassword(!showPassword)}>
+            <span
+              style={styles.toggleBtn}
+              onClick={() => setShowPassword(!showPassword)}
+            >
               {showPassword ? "🙈" : "👁️"}
             </span>
           </div>
@@ -181,7 +196,10 @@ export default function Register() {
               required
               style={styles.input}
             />
-            <span style={styles.toggleBtn} onClick={() => setShowConfirm(!showConfirm)}>
+            <span
+              style={styles.toggleBtn}
+              onClick={() => setShowConfirm(!showConfirm)}
+            >
               {showConfirm ? "🙈" : "👁️"}
             </span>
           </div>

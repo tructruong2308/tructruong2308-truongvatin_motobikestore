@@ -9,9 +9,9 @@ class Category extends Model
 {
     use HasFactory;
 
-    protected $table = 'ntt_category';   // tên bảng
-    protected $primaryKey = 'id';        // khóa chính
-    public $timestamps = false;          // nếu bảng không có created_at, updated_at
+    protected $table = 'ntt_category';
+    protected $primaryKey = 'id';
+    public $timestamps = false;
 
     protected $fillable = [
         'name',
@@ -22,7 +22,6 @@ class Category extends Model
         'description'
     ];
 
-    // ✅ thêm field image_url vào JSON trả về
     protected $appends = ['image_url'];
 
     public function getImageUrlAttribute()
@@ -32,7 +31,6 @@ class Category extends Model
             : null;
     }
 
-    // Quan hệ với Product
     public function products()
     {
         return $this->hasMany(Product::class, 'category_id');

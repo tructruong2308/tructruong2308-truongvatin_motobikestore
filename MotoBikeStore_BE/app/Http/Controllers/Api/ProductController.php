@@ -60,33 +60,40 @@ class ProductController extends Controller
     // Danh sách sản phẩm
     public function index()
     {
-        $products = Product::with('brand:id,name') // ✅ eager-load brand
-            ->select(['id','name','brand_id','price_sale as price','thumbnail'])
+        $products = Product::with('brand:id,name')
+            ->select(['id', 'name', 'brand_id', 'price_sale as price', 'thumbnail'])
             ->latest('id')
-            ->get();
+            ->paginate(12);
 
-        // Ẩn quan hệ thô, FE dùng brand_name & thumbnail_url
-        return $products->makeHidden(['brand','brand_id']);
+        // Ẩn brand_id nếu không muốn lộ schema nội bộ
+        return $products->makeHidden(['brand', 'brand_id']);
     }
 
     // Chi tiết sản phẩm
     public function show($id)
     {
         $p = Product::with('brand:id,name')
-            ->select(['id','name','brand_id','price_sale as price','thumbnail','detail','description','category_id',])
+            ->select([
+                'id','name','brand_id',
+                'price_sale as price',
+                'thumbnail','detail',
+                'description','category_id',
+            ])
             ->find($id);
 
-        if (!$p) return response()->json(['message' => 'Not found'], 404);
+        if (!$p) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
 
         return $p->makeHidden(['brand','brand_id']);
     }
-public function byCategory($id)
-{
-    return Product::where('category_id', $id)
-        ->select(['id','name','price_sale as price','thumbnail'])
-        ->latest('id')
-        ->get();
-}
-}
 
-
+    // Lấy sản phẩm theo category
+    public function byCategory($id)
+    {
+        return Product::where('category_id', $id)
+            ->select(['id','name','price_sale as price','thumbnail'])
+            ->latest('id')
+            ->get();
+    }
+}

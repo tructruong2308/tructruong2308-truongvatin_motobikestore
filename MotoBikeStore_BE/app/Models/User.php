@@ -11,8 +11,22 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    // CHO PHÉP gán các field này
-    protected $fillable = ['name', 'email', 'password', 'phone'];
+    protected $table = 'ntt_user'; // ✅ bảng thật trong DB
+
+    protected $fillable = [
+        'name',
+        'email',
+        'username',
+        'password',
+        'phone',
+        'roles',
+        'status',
+        'address',
+        'avatar',
+        'created_by',
+        'updated_by',
+        'deleted_at',
+    ];
 
     protected $hidden = ['password', 'remember_token'];
 }

@@ -48,16 +48,24 @@ const handleLogout = async () => {
 
 // ---- Layout cho phần khách hàng ----
 function Layout({ children }) {
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const [user, setUser] = React.useState(
+    () => JSON.parse(localStorage.getItem("user") || "null")
+  );
   const [open, setOpen] = React.useState(false);
+
+  // khi logout thì xoá luôn state user
+  const doLogout = async () => {
+    await handleLogout();
+    setUser(null); // ✅ update state để UI biến mất ngay
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <header className="px-6 py-3 border-b bg-white shadow-sm flex items-center justify-between">
-        {/* Logo bên trái */}
+        {/* Logo */}
         <div className="font-bold text-green-700 text-lg">🏍️ MotoBikeStore</div>
 
-        {/* Menu giữa */}
+        {/* Menu */}
         <nav className="flex gap-8 text-gray-700 font-medium">
           <NavLink to="/" end className="hover:text-green-700">
             Trang chủ
@@ -70,7 +78,7 @@ function Layout({ children }) {
           </NavLink>
         </nav>
 
-        {/* Avatar / Menu bên phải */}
+        {/* Avatar / Menu */}
         <div className="relative">
           <button
             onClick={() => setOpen(!open)}
@@ -79,7 +87,6 @@ function Layout({ children }) {
             <img alt="avatar" className="w-full h-full object-cover" />
           </button>
 
-          {/* Dropdown */}
           {open && (
             <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2 z-50">
               {user ? (
@@ -88,7 +95,7 @@ function Layout({ children }) {
                     👋 Xin chào, <b>{user.name}</b>
                   </div>
                   <button
-                    onClick={handleLogout}
+                    onClick={doLogout}
                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                   >
                     Đăng xuất
@@ -117,10 +124,7 @@ function Layout({ children }) {
         </div>
       </header>
 
-      {/* Nội dung chính */}
       <main className="flex-1 p-6">{children}</main>
-
-      {/* Footer */}
       <footer className="px-6 py-3 border-t text-sm text-gray-600 text-center">
         © {new Date().getFullYear()} MotoBikeStore
       </footer>
@@ -188,6 +192,7 @@ function App() {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />
+          
         </Route>
 
         {/* 404 */}

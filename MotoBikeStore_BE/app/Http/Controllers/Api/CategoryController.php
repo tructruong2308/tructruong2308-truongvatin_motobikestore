@@ -5,38 +5,28 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
-    // Lấy tất cả danh mục
+    // GET /api/categories
     public function index()
     {
-        $cats = Category::all()->map(function ($cat) {
-            $cat->image_url = $cat->image 
-                ? url('assets/images/' . $cat->image) 
-                : null;
-            return $cat;
-        });
-
-        return response()->json($cats);
+        $cats = Category::orderBy('sort_order', 'asc')->get();
+        return response()->json(['data' => $cats]);
     }
 
-    // Lấy thông tin chi tiết 1 danh mục
+    // GET /api/categories/{id}
     public function show($id)
     {
         $cat = Category::find($id);
         if (!$cat) {
             return response()->json(['message' => 'Category not found'], 404);
         }
-
-        $cat->image_url = $cat->image 
-            ? url('assets/images/' . $cat->image) 
-            : null;
-
-        return response()->json($cat);
+        return response()->json(['data' => $cat]);
     }
 
-    // Lấy tất cả sản phẩm thuộc 1 danh mục
+    // GET /api/categories/{id}/products
     public function products($id)
     {
         $cat = Category::find($id);
@@ -44,9 +34,59 @@ class CategoryController extends Controller
             return response()->json(['message' => 'Category not found'], 404);
         }
 
-        // Lấy sản phẩm liên kết với category
         $products = $cat->products()->with('brand:id,name')->get();
+        return response()->json(['data' => $products]);
+    }
 
-        return response()->json($products);
+    // POST /api/categories  (auth required)
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'name'        => ['required', 'string', 'max:255'],
+            'slug'        => ['required', 'string', 'max:255', 'unique:ntt_category,slug'],
+            'image'       => ['nullable', 'string', 'max:255'], // tên file ảnh (nếu đã upload sẵn)
+            'parent_id'   => ['nullable', 'integer'],
+            'sort_order'  => ['nullable', 'integer'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $cat = Category::create($data);
+        return response()->json(['data' => $cat], 201);
+    }
+
+    // PUT /api/categories/{id}  (auth required)
+    public function update(Request $request, $id)
+    {
+        $cat = Category::find($id);
+        if (!$cat) {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
+
+        $data = $request->validate([
+            'name'        => ['sometimes', 'required', 'string', 'max:255'],
+            'slug'        => [
+                'sometimes', 'required', 'string', 'max:255',
+                Rule::unique('ntt_category', 'slug')->ignore($cat->id)
+            ],
+            'image'       => ['nullable', 'string', 'max:255'],
+            'parent_id'   => ['nullable', 'integer'],
+            'sort_order'  => ['nullable', 'integer'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $cat->update($data);
+        return response()->json(['data' => $cat]);
+    }
+
+    // DELETE /api/categories/{id}  (auth required)
+    public function destroy($id)
+    {
+        $cat = Category::find($id);
+        if (!$cat) {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
+
+        $cat->delete();
+        return response()->json(['message' => 'Deleted']);
     }
 }
