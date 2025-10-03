@@ -1,24 +1,46 @@
+import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+
 export default function Dashboard() {
-  const cards = [
-    { label: "Doanh thu hôm nay", value: "₫12,500,000" },
-    { label: "Đơn hàng mới", value: "38" },
-    { label: "Sản phẩm tồn kho thấp", value: "7" },
-    { label: "Người dùng mới", value: "15" },
-  ];
+  const [auth, setAuth] = useState({ checked: false, allow: false });
 
+  // ✅ Kiểm tra token + quyền
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+
+    if (!token || !user) {
+      setAuth({ checked: true, allow: false });
+    } else if (user.roles === "admin") {
+      setAuth({ checked: true, allow: true });
+    } else {
+      setAuth({ checked: true, allow: false });
+    }
+  }, []);
+
+  if (!auth.checked) {
+    return <div className="p-6">⏳ Đang kiểm tra quyền truy cập...</div>;
+  }
+
+  if (!auth.allow) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  // ✅ Giao diện Dashboard chỉ có video
   return (
-    <section>
-      <h1 style={{ fontSize: 24, marginBottom: 12 }}>Dashboard</h1>
+    <section className="flex flex-col items-center">
+      <h1 className="text-2xl font-bold mb-6">Bảng điều khiển</h1>
 
-      <div style={{
-        display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: 12
-      }}>
-        {cards.map(c => (
-          <div key={c.label} style={{ background: "#fff", border: "1px solid #eee", borderRadius: 10, padding: 16 }}>
-            <div style={{ color: "#666", marginBottom: 6 }}>{c.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 700 }}>{c.value}</div>
-          </div>
-        ))}
+      {/* Video demo nhỏ gọn */}
+      <div className="w-full max-w-3xl">
+        <video
+          width="75%"
+          controls
+          className="rounded-lg shadow-lg border"
+        >
+          <source src="http://127.0.0.1:8000/assets/video/luffy.mp4" type="video/mp4" />
+          Trình duyệt của bạn không hỗ trợ video.
+        </video>
       </div>
     </section>
   );

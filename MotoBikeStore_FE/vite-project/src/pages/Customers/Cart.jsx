@@ -1,198 +1,55 @@
-// src/pages/Customers/Cart.jsx
-import { useNavigate } from "react-router-dom";
+const VND = new Intl.NumberFormat("vi-VN");
 
-export default function Cart({ cart, setCart }) {
-  const navigate = useNavigate();
-
-  // ✅ Tổng cộng (fallback an toàn)
-  const total = cart.reduce(
-    (sum, item) => sum + (Number(item.price) || 0) * (item.qty ?? 1),
-    0
-  );
-
-  // ✅ Tăng số lượng
-  const increaseQty = (id) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, qty: (item.qty ?? 1) + 1 } : item
-      )
-    );
-  };
-
-  // ✅ Giảm số lượng (không nhỏ hơn 1)
-  const decreaseQty = (id) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === id && (item.qty ?? 1) > 1
-          ? { ...item, qty: item.qty - 1 }
-          : item
-      )
-    );
-  };
-
-  // ✅ Xoá 1 sản phẩm
-  const removeItem = (id) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  // ✅ Xoá toàn bộ giỏ
-  const clearCart = () => {
-    if (window.confirm("Bạn có chắc muốn xoá toàn bộ giỏ hàng?")) {
-      setCart([]);
-    }
-  };
+export default function Cart({ cart = [], setCart }) {
+  const updateQty = (id, qty) => setCart(list => list.map(x => x.id === id ? { ...x, qty: Math.max(1, qty) } : x));
+  const removeItem = (id) => setCart(list => list.filter(x => x.id !== id));
+  const total = cart.reduce((s, i) => s + (i.qty || 1) * Number(i.price || 0), 0);
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>🛒 Giỏ hàng</h2>
+    <div className="u-grid" style={{ gap: 16 }}>
+      <h1 style={{ margin: 0 }}>Giỏ hàng</h1>
 
-      {cart.length === 0 ? (
-        <p>Giỏ hàng trống</p>
-      ) : (
-        <div>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              marginTop: 16,
-            }}
-          >
-            <thead>
-              <tr style={{ borderBottom: "2px solid #ccc" }}>
-                <th style={{ textAlign: "left", padding: 8 }}>Sản phẩm</th>
-                <th style={{ textAlign: "center", padding: 8 }}>Ảnh</th>
-                <th style={{ textAlign: "center", padding: 8 }}>Giá</th>
-                <th style={{ textAlign: "center", padding: 8 }}>Số lượng</th>
-                <th style={{ textAlign: "center", padding: 8 }}>Thành tiền</th>
-                <th style={{ textAlign: "center", padding: 8 }}>Hành động</th>
+      <div className="u-card u-border" style={{ padding: 0, overflow: "hidden" }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Sản phẩm</th>
+              <th style={{ width: 120 }}>Giá</th>
+              <th style={{ width: 140 }}>Số lượng</th>
+              <th style={{ width: 140 }}>Tạm tính</th>
+              <th style={{ width: 80 }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {cart.length === 0 && (
+              <tr><td colSpan={5} style={{ textAlign: "center", padding: 24, color: "#9fb3d9" }}>Giỏ hàng trống</td></tr>
+            )}
+            {cart.map(it => (
+              <tr key={it.id}>
+                <td style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <img src={it.thumbnail_url || "https://placehold.co/60x40?text=No+Img"} style={{ width: 60, height: 40, objectFit: "cover", borderRadius: 8 }} />
+                  <div style={{ fontWeight: 700 }}>{it.name}</div>
+                </td>
+                <td>{VND.format(it.price || 0)}₫</td>
+                <td>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <button className="u-btn outline" onClick={() => updateQty(it.id, (it.qty || 1) - 1)}>-</button>
+                    <input className="u-input" value={it.qty || 1} onChange={e => updateQty(it.id, +e.target.value || 1)} style={{ width: 64, textAlign: "center" }} />
+                    <button className="u-btn outline" onClick={() => updateQty(it.id, (it.qty || 1) + 1)}>+</button>
+                  </div>
+                </td>
+                <td style={{ fontWeight: 700 }}>{VND.format((it.qty || 1) * (it.price || 0))}₫</td>
+                <td><button className="u-btn ghost" onClick={() => removeItem(it.id)}>Xoá</button></td>
               </tr>
-            </thead>
-            <tbody>
-              {cart.map((item) => (
-                <tr key={item.id} style={{ borderBottom: "1px solid #eee" }}>
-                  <td style={{ padding: 8 }}>{item.name}</td>
-                  <td style={{ padding: 8, textAlign: "center" }}>
-                    <img
-                      src={
-                        item.thumbnail_url ||
-                        item.thumbnail ||
-                        "https://placehold.co/80x60"
-                      }
-                      alt={item.name}
-                      style={{
-                        width: 80,
-                        height: 60,
-                        objectFit: "cover",
-                        borderRadius: 6,
-                      }}
-                      onError={(e) =>
-                        (e.currentTarget.src = "https://placehold.co/80x60")
-                      }
-                    />
-                  </td>
-                  <td style={{ padding: 8, textAlign: "center" }}>
-                    {((Number(item.price) || 0)).toLocaleString()} đ
-                  </td>
-                  <td style={{ padding: 8, textAlign: "center" }}>
-                    <button
-                      onClick={() => decreaseQty(item.id)}
-                      style={{
-                        padding: "4px 8px",
-                        marginRight: 6,
-                        cursor: "pointer",
-                      }}
-                    >
-                      -
-                    </button>
-                    {item.qty ?? 1}
-                    <button
-                      onClick={() => increaseQty(item.id)}
-                      style={{
-                        padding: "4px 8px",
-                        marginLeft: 6,
-                        cursor: "pointer",
-                      }}
-                    >
-                      +
-                    </button>
-                  </td>
-                  <td
-                    style={{
-                      padding: 8,
-                      textAlign: "center",
-                      fontWeight: 600,
-                      color: "#d32f2f",
-                    }}
-                  >
-                    {(((Number(item.price) || 0) * (item.qty ?? 1))).toLocaleString()} đ
-                  </td>
-                  <td style={{ padding: 8, textAlign: "center" }}>
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      style={{
-                        background: "#d32f2f",
-                        color: "#fff",
-                        border: 0,
-                        padding: "6px 10px",
-                        borderRadius: 6,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Xoá
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-          {/* Tổng cộng + hành động */}
-          <div
-            style={{
-              marginTop: 20,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <button
-              onClick={clearCart}
-              style={{
-                background: "#999",
-                color: "#fff",
-                border: 0,
-                padding: "8px 12px",
-                borderRadius: 6,
-                cursor: "pointer",
-              }}
-            >
-              🗑 Xoá toàn bộ
-            </button>
-
-            <h3>
-              Tổng cộng:{" "}
-              <span style={{ color: "#d32f2f" }}>
-                {total.toLocaleString()} đ
-              </span>
-            </h3>
-
-            {/* ✅ Chuyển qua trang Checkout và truyền cart */}
-            <button
-              style={{
-                background: "green",
-                color: "#fff",
-                padding: "8px 16px",
-                border: 0,
-                borderRadius: 8,
-                cursor: "pointer",
-              }}
-              onClick={() => navigate("/checkout", { state: { cart } })}
-            >
-              Thanh toán
-            </button>
-          </div>
-        </div>
-      )}
+      <div className="u-card u-border" style={{ padding: 16, display: "flex", gap: 12, alignItems: "center", justifyContent: "flex-end" }}>
+        <div style={{ fontWeight: 900, fontSize: 18 }}>Tổng: {VND.format(total)}₫</div>
+        <a className="u-btn" href="/checkout">Thanh toán</a>
+      </div>
     </div>
   );
 }

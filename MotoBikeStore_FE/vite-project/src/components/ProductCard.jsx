@@ -1,71 +1,40 @@
 import { Link } from "react-router-dom";
 
-const PLACEHOLDER = "https://placehold.co/300x200?text=No+Image";
+const VND = new Intl.NumberFormat("vi-VN");
+const PLACEHOLDER = "https://placehold.co/320x240?text=No+Image";
 
-export default function ProductCard({ p }) {
-  const price = Number(p.price) || 0;
-  const imgSrc = p.thumbnail_url || p.thumbnail || PLACEHOLDER;
+export default function ProductCard({ p, onAdd }) {
+  const root = Number(p.price_root ?? p.price ?? p.unit_price ?? 0);
+  const sale = Number(p.price_sale ?? 0);
+  const price = sale > 0 && sale < root ? sale : root;
+  const img =
+    p.image || p.thumbnail_url || p.thumbnail || p.image_url || PLACEHOLDER;
+
+  const add = () => {
+    if (typeof onAdd === "function") return onAdd(p);
+    window.dispatchEvent(new CustomEvent("add-to-cart", { detail: p }));
+  };
 
   return (
-    <div
-      className="product-card"
-      style={{
-        background: "#fff",
-        borderRadius: 12,
-        boxShadow: "0 2px 8px #e0f2f1",
-        padding: 16,
-        width: 220,
-        margin: 8,
-        textAlign: "center",
-      }}
-    >
-      {/* ✅ Link sang chi tiết sản phẩm */}
-      <Link
-        to={`/products/${p.id}`}
-        style={{ textDecoration: "none", color: "inherit" }}
-      >
-        <div className="product-image" style={{ marginBottom: 10 }}>
-          <img
-            src={imgSrc}
-            alt={p.name}
-            style={{
-              width: "100%",
-              height: 120,
-              objectFit: "cover",
-              borderRadius: 8,
-            }}
-            onError={(e) => {
-              e.currentTarget.src = PLACEHOLDER;
-            }}
-          />
-        </div>
-
-        <div className="product-info">
-          <div
-            className="name"
-            style={{ fontWeight: "bold", fontSize: 16 }}
-          >
-            {p.name}
-          </div>
-          <div className="brand" style={{ color: "#388e3c", fontSize: 13 }}>
-            {p.brand_name ? `${p.brand_name}` : "Farm Local"}
-          </div>
-
-
-
-          
-          <div
-            className="price"
-            style={{
-              color: "#43a047",
-              fontWeight: "bold",
-              marginTop: 4,
-            }}
-          >
-            {price.toLocaleString()} đ
-          </div>
-        </div>
+    <div className="product-card">
+      <Link to={`/products/${p.id}`} className="product-media" aria-label={p.name}>
+        <img src={img} alt={p.name} onError={(e)=> (e.currentTarget.src = PLACEHOLDER)} />
       </Link>
+
+      <div className="product-body">
+        <Link to={`/products/${p.id}`} className="product-title">{p.name}</Link>
+        <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
+          <div className="product-price">{VND.format(price)}₫</div>
+          {sale > 0 && sale < root && (
+            <div className="product-old">{VND.format(root)}₫</div>
+          )}
+        </div>
+      </div>
+
+      <div className="product-actions">
+        <button className="u-btn" onClick={add}>Thêm giỏ</button>
+        <Link className="u-btn ghost" to={`/products/${p.id}`}>Xem</Link>
+      </div>
     </div>
   );
 }

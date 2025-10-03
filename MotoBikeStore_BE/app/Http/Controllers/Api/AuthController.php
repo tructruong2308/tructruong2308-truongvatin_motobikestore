@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    // ========== Đăng ký customer ==========
     public function register(Request $request)
     {
         $data = $request->validate([
@@ -26,7 +27,7 @@ class AuthController extends Controller
             'username' => $data['username'],
             'password' => Hash::make($data['password']),
             'phone'    => $data['phone'],
-            'roles'    => 'customer',
+            'roles'    => 'customer', // mặc định customer
             'status'   => 1,
         ]);
 
@@ -40,6 +41,7 @@ class AuthController extends Controller
         ], 201);
     }
 
+    // ========== Đăng nhập customer ==========
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -54,7 +56,14 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user  = Auth::user();
+        $user = Auth::user();
+        if ($user->roles !== 'customer') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản không phải là khách hàng',
+            ], 403);
+        }
+
         $token = $user->createToken('web')->plainTextToken;
 
         return response()->json([
@@ -65,6 +74,40 @@ class AuthController extends Controller
         ]);
     }
 
+    // ========== Đăng nhập admin ==========
+    public function loginAdmin(Request $request)
+    {
+        $credentials = $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sai email hoặc mật khẩu',
+            ], 401);
+        }
+
+        $user = Auth::user();
+        if ($user->roles !== 'admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn không có quyền truy cập admin',
+            ], 403);
+        }
+
+        $token = $user->createToken('admin')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đăng nhập admin thành công',
+            'user'    => $user,
+            'token'   => $token,
+        ]);
+    }
+
+    // ========== Đăng xuất ==========
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();

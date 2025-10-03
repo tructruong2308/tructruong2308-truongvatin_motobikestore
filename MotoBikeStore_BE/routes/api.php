@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\UserController;
 */
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
+// Admin
+Route::post('/admin/login', [AuthController::class, 'loginAdmin']); 
 
 // Products (public)
 Route::get('/products',      [ProductController::class, 'index']);

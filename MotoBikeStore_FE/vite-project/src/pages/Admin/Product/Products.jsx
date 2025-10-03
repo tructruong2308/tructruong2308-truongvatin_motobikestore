@@ -1,6 +1,20 @@
+// src/pages/Admin/Product/Products.jsx
 import { useEffect, useMemo, useState } from "react";
 
-const API_BASE = "http://127.0.0.1:8000/api"; // Laravel API (chú ý có /api)
+const API_BASE = "http://127.0.0.1:8000/api"; // Laravel API
+const IMG_PLACEHOLDER = "https://placehold.co/50x50?text=No+Img";
+
+// ===== Helpers =====
+const formatVND = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n.toLocaleString("vi-VN") : "0";
+};
+
+// Lấy giá gốc dù BE đặt key khác nhau (price_root | price | priceRoot)
+const pickPriceRoot = (p) => p?.price_root ?? p?.price ?? p?.priceRoot ?? 0;
+
+// Lấy ảnh có thể là thumbnail_url | thumbnail, nếu rỗng dùng placeholder
+const getThumb = (p) => p?.thumbnail_url || p?.thumbnail || IMG_PLACEHOLDER;
 
 export default function Products() {
   const [items, setItems] = useState([]);
@@ -11,23 +25,33 @@ export default function Products() {
   // ✅ Gọi API lấy danh sách sản phẩm
   useEffect(() => {
     const ac = new AbortController();
+    const token = localStorage.getItem("token");
+
     (async () => {
       try {
         setLoading(true);
         setErr("");
-        const res = await fetch(`${API_BASE}/products`, { signal: ac.signal });
+
+        const res = await fetch(`${API_BASE}/products`, {
+          signal: ac.signal,
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
-        // Trường hợp Laravel trả về dạng {data: [...]}
-        const list = Array.isArray(data) ? data : data.data ?? [];
-        setItems(list);
+        // Trường hợp Laravel trả về { data: [...] } hoặc { items: [...] }
+        const list = Array.isArray(data) ? data : data.data ?? data.items ?? [];
+        setItems(Array.isArray(list) ? list : []);
       } catch (e) {
         if (e.name !== "AbortError") setErr("Không tải được sản phẩm.");
       } finally {
         setLoading(false);
       }
     })();
+
     return () => ac.abort();
   }, []);
 
@@ -37,19 +61,23 @@ export default function Products() {
     if (!s) return items;
     return items.filter(
       (x) =>
-        x.name?.toLowerCase().includes(s) ||
-        x.sku?.toLowerCase().includes(s)
+        x?.name?.toLowerCase().includes(s) ||
+        x?.sku?.toLowerCase().includes(s)
     );
   }, [q, items]);
 
   // ✅ Hàm xóa sản phẩm
-  const handleDelete = async (id) => {
-    if (!window.confirm("Bạn có chắc muốn xóa sản phẩm này?")) return;
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa sản phẩm "${name || id}"?`)) return;
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/products/${id}`, {
         method: "DELETE",
-        headers: { Accept: "application/json" },
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       });
       if (!res.ok) throw new Error("Xóa thất bại");
       setItems((prev) => prev.filter((x) => x.id !== id));
@@ -69,7 +97,7 @@ export default function Products() {
           gap: 10,
         }}
       >
-        <h1 style={{ fontSize: 24 }}>Products</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Products</h1>
         <div style={{ display: "flex", gap: 8 }}>
           <input
             value={q}
@@ -80,6 +108,7 @@ export default function Products() {
               padding: "0 10px",
               border: "1px solid #ddd",
               borderRadius: 8,
+              minWidth: 220,
             }}
           />
           <button
@@ -90,6 +119,8 @@ export default function Products() {
               border: "1px solid #0f62fe",
               background: "#0f62fe",
               color: "#fff",
+              cursor: "pointer",
+              fontWeight: 600,
             }}
           >
             + Add
@@ -125,7 +156,7 @@ export default function Products() {
                 <td>{p.id}</td>
                 <td>
                   <img
-                    src={p.thumbnail_url}
+                    src={getThumb(p)}
                     alt={p.name}
                     style={{
                       width: 50,
@@ -134,19 +165,34 @@ export default function Products() {
                       borderRadius: 6,
                       transition: "transform 0.2s",
                     }}
-                    onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.5)")}
-                    onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                    onMouseOver={(e) =>
+                      (e.currentTarget.style.transform = "scale(1.5)")
+                    }
+                    onMouseOut={(e) =>
+                      (e.currentTarget.style.transform = "scale(1)")
+                    }
+                    onError={(e) => {
+                      e.currentTarget.src = IMG_PLACEHOLDER;
+                    }}
                   />
                 </td>
                 <td>{p.name}</td>
                 <td>{p.sku}</td>
-                <td align="right">
-                  ₫{(p.price_root ?? 0).toLocaleString("vi-VN")}
-                </td>
-                <td align="right">{p.qty ?? 0}</td>
+                <td align="right">₫{formatVND(pickPriceRoot(p))}</td>
+                <td align="right">{Number(p?.qty ?? 0)}</td>
                 <td align="center">
-                  <button onClick={() => alert("Edit " + p.id)}>Sửa</button>{" "}
-                  <button onClick={() => handleDelete(p.id)}>Xóa</button>
+                  <button
+                    onClick={() => alert("Edit " + p.id)}
+                    style={{ marginRight: 6, cursor: "pointer" }}
+                  >
+                    Sửa
+                  </button>
+                  <button
+                    onClick={() => handleDelete(p.id, p.name)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Xóa
+                  </button>
                 </td>
               </tr>
             ))}
